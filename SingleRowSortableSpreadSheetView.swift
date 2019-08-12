@@ -154,10 +154,15 @@ extension SpreadsheetView : SpreadsheetViewDelegate {
     }
     
     
-    //Select the row that contains the unique object at the specified column
-    private func selectRow(forUniqueObject obj : Any) {
+    //Select the row that contains the unique object at the specified column, if the object is nil, clear selections
+    func selectRow(forUniqueObject obj : Any?) {
         
         guard let delegate = getDelegate() else {
+            return
+        }
+        
+        guard let obj = obj else {
+            deselectAll()  //not found
             return
         }
         
@@ -171,6 +176,7 @@ extension SpreadsheetView : SpreadsheetViewDelegate {
             }
 
         }
+        deselectAll()  //not found
         
     }
     
