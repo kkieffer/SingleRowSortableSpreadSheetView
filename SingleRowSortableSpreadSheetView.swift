@@ -102,6 +102,8 @@ extension SpreadsheetView : SpreadsheetViewDelegate {
         
     }
     
+
+    
     //If not the header row, on long press start, deselect existing rows, highlight the new row.
     //When finished, notify the delegate of the long press
     @objc func handleLongPress(sender: UILongPressGestureRecognizer) {
@@ -177,13 +179,18 @@ extension SpreadsheetView : SpreadsheetViewDelegate {
     //DeSelect all columns in the row
     func deselectAll() {
         for row in 0..<numberOfRows {
-            for col in 0..<numberOfRows {
+            for col in 0..<numberOfColumns {
                 deselectItem(at: IndexPath(row: row, column: col), animated: false)
             }
         }
     }
     
     func getSelectedRow() -> Int? {
+        
+        if numberOfRows < 1 {  //nothing could be selected
+            return nil
+        }
+        
         for row in 1..<numberOfRows {
             
             let indexPath = IndexPath(row: row, column: 0)
