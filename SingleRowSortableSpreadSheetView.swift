@@ -28,6 +28,7 @@ protocol SpreadsheetActionsDelegate : SpreadsheetViewDelegate {
     
     func sortBy(column: Int)            //delegate receives notification to sort by the provided column index
     func didSelectRow(at row: Int)      //delegate receives notification that a row other than the header was selected, row > 0
+    func longPressDidBegin(at row: Int) //delegate receives notification that a row other than the header started a long press, row > 0
     func longPressDidEnd(at row: Int)   //delegate receives notification that a row other than the header was long pressed, row > 0
     
     //Delegate should return a unique object associated with the row
@@ -119,6 +120,7 @@ extension SpreadsheetView : SpreadsheetViewDelegate {
             switch sender.state {
             case .began:
                 deselectAll()
+                delegate.longPressDidBegin(at: indexPath.row)
                 fallthrough
             case .changed:
                 highlight(on: true, atRow: indexPath.row)
@@ -155,29 +157,31 @@ extension SpreadsheetView : SpreadsheetViewDelegate {
     
     
     //Select the row that contains the unique object at the specified column, if the object is nil, clear selections
-    func selectRow(forUniqueObject obj : Any?) {
+    //Return true if a row was selected, false if all rows are deselected
+    func selectRow(forUniqueObject obj : Any?) -> Bool {
         
         guard let delegate = getDelegate() else {
-            return
+            return false
         }
         
-        guard let obj = obj else {
+        guard let obj = obj, numberOfRows > 1 else {
             deselectAll()  //not found
-            return
+            return false
         }
         
         for row in 1..<numberOfRows {
             
-            let unique = delegate.uniqueObject(forRow : row)  //get the unique object for each row
+            let unique = delegate.uniqueObject(forRow : row)   //get the unique object for each row
             
             if delegate.uniqueObjectsAreEqual(obj, unique) {  //objects match - this is the row to select
                 selectRow(at: row)
-                return
+                return true
             }
+            
 
         }
         deselectAll()  //not found
-        
+        return false
     }
     
     
