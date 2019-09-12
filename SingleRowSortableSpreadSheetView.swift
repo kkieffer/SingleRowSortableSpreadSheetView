@@ -120,13 +120,10 @@ extension SpreadsheetView : SpreadsheetViewDelegate {
             switch sender.state {
             case .began:
                 deselectAll()
-                delegate.longPressDidBegin(at: indexPath.row)
-                fallthrough
-            case .changed:
-                highlight(on: true, atRow: indexPath.row)
-            case .ended:
                 selectRow(at: indexPath.row)
                 delegate.didSelectRow(at: indexPath.row)
+                delegate.longPressDidBegin(at: indexPath.row)
+            case .ended:
                 delegate.longPressDidEnd(at: indexPath.row)
             default:
                 break
