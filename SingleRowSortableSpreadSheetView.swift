@@ -71,18 +71,17 @@ extension SpreadsheetView : SpreadsheetViewDelegate {
     }
     
     //On tap, notify the delegate to sort if tap was on the header, otherwise select the row and let the delegate know
-    @objc func handleTap(sender: UILongPressGestureRecognizer) {
-        
-        guard let delegate = getDelegate() else {
-            return
-        }
-        
+    @objc func handleTap(sender: UITapGestureRecognizer) {
+
         if let indexPath = indexPathForItem(at: sender.location(in: self)) {
+                        
+            guard let delegate = getDelegate() else {
+                return
+            }
             
             if indexPath.row == 0 {  //header - sort
                 
                 var unique : Any?
-                
                 if let selectedRow = getSelectedRow() {  //has a selected row
                     unique = delegate.uniqueObject(forRow: selectedRow)  //get a unique object at the selected row
                 }
@@ -91,7 +90,7 @@ extension SpreadsheetView : SpreadsheetViewDelegate {
                 reloadData()  //reload the data from the model
                 
                 if unique != nil {  //if there was a previously selected row
-                    selectRow(forUniqueObject: unique!)  //now reselect the row with the unique object
+                    let _ = selectRow(forUniqueObject: unique!)  //now reselect the row with the unique object
                 }
             }
                 
@@ -142,7 +141,7 @@ extension SpreadsheetView : SpreadsheetViewDelegate {
         }
     }
     
-    //Select all columns in the row
+    //Deselect all rows, then select all columns in the row
     func selectRow(at row : Int) {
         
         deselectAll()
@@ -183,13 +182,9 @@ extension SpreadsheetView : SpreadsheetViewDelegate {
     
     
     
-    //DeSelect all columns in the row
+    //Deselect all columns in all rows
     func deselectAll() {
-        for row in 0..<numberOfRows {
-            for col in 0..<numberOfColumns {
-                deselectItem(at: IndexPath(row: row, column: col), animated: false)
-            }
-        }
+        selectItem(at: nil, animated: false, scrollPosition: .init())
     }
     
     func getSelectedRow() -> Int? {
