@@ -28,8 +28,8 @@ protocol SpreadsheetActionsDelegate : SpreadsheetViewDelegate {
     
     func sortBy(column: Int)            //delegate receives notification to sort by the provided column index
     func didSelectRow(at row: Int)      //delegate receives notification that a row other than the header was selected, row > 0
-    func longPressDidBegin(at row: Int) //delegate receives notification that a row other than the header started a long press, row > 0
-    func longPressDidEnd(at row: Int)   //delegate receives notification that a row other than the header was long pressed, row > 0
+    func longPressDidBegin(at row: Int) //delegate receives notification that a row started a long press,
+    func longPressDidEnd(at row: Int)   //delegate receives notification that a row ended a long pressed
     
     //Delegate should return a unique object associated with the row
     func uniqueObject(forRow row : Int) -> Any
@@ -53,28 +53,10 @@ extension SpreadsheetView : SpreadsheetViewDelegate {
         
     }
     
-    
-    func addTapAndLongPressGestures(withMinLongPressDuration : Double) {
-        
-        //These must be set to true or selection is impossible
-        allowsSelection = true
-        allowsMultipleSelection = true
-        
-        let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress))
-        longPressRecognizer.delaysTouchesBegan = false
-        longPressRecognizer.minimumPressDuration = withMinLongPressDuration
-        addGestureRecognizer(longPressRecognizer)
-        
-        let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTap))
-        addGestureRecognizer(tapRecognizer)
-        
-    }
-    
-    //On tap, notify the delegate to sort if tap was on the header, otherwise select the row and let the delegate know
-    @objc func handleTap(sender: UITapGestureRecognizer) {
-
-        if let indexPath = indexPathForItem(at: sender.location(in: self)) {
-                        
+    //On row pressed, notify the delegate to sort if tap was on the header, otherwise select the row and let the delegate know
+    private func rowPressed(at location: CGPoint) {
+        if let indexPath = indexPathForItem(at: location) {
+            
             guard let delegate = getDelegate() else {
                 return
             }
@@ -99,28 +81,54 @@ extension SpreadsheetView : SpreadsheetViewDelegate {
                 delegate.didSelectRow(at: indexPath.row)
             }
         }
+    }
+    
+    
+    func addTapAndLongPressGestures(withMinLongPressDuration : Double) {
+        
+        //These must be set to true or selection is impossible
+        allowsSelection = true
+        allowsMultipleSelection = true
+        
+        let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress))
+        longPressRecognizer.delaysTouchesBegan = false
+        longPressRecognizer.minimumPressDuration = withMinLongPressDuration
+        addGestureRecognizer(longPressRecognizer)
+        
+        let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTap))
+        addGestureRecognizer(tapRecognizer)
+        
+        //Note: with both a long tap and regular tap recognizer, one or the other might be called on the single tap,
+        //depending on whether the OS thinks a long press is starting or a single press occurred.
+        //Just having the long press handler is not always enough to recognize a very short tap, but a short tap might
+        //also be recognized as starting a long press. So both recognizers are needed and they both call the
+        //rowPressed() function so we're guaranteeed to handle the row select. If its a long press, that handler will
+        //take care of the ending of the long press
         
     }
     
-
     
-    //If not the header row, on long press start, deselect existing rows, highlight the new row.
-    //When finished, notify the delegate of the long press
+    @objc func handleTap(sender: UITapGestureRecognizer) {
+        let location = sender.location(in: self)
+        rowPressed(at: location)
+    }
+    
+    
+    //On start, handle pressing of the row and notify delegate of the long press start
+    //When finished, notify the delegate of the long press end
     @objc func handleLongPress(sender: UILongPressGestureRecognizer) {
         
         guard let delegate = getDelegate() else {
             return
         }
-        
-        if let indexPath = indexPathForItem(at: sender.location(in: self)) {
-            if indexPath.row == 0 {  //no longpress on column headers
-                return
-            }
+
+        let location = sender.location(in: self)
+
+        if let indexPath = indexPathForItem(at: location) {
+
             switch sender.state {
             case .began:
-                deselectAll()
-                selectRow(at: indexPath.row)
-                delegate.didSelectRow(at: indexPath.row)
+                rowPressed(at: location)
                 delegate.longPressDidBegin(at: indexPath.row)
             case .ended:
                 delegate.longPressDidEnd(at: indexPath.row)
