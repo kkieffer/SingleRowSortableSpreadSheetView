@@ -1,6 +1,6 @@
 # SingleRowSortableSpreadSheetView.swift
 
-This file extends the functionality of: [kishikawakatsumi/SpreadsheetView](https:www.github.com/kishikawakatsumi/SpreadsheetView)
+This file extends the functionality of: [kishikawakatsumi/SpreadsheetView](http:www.github.com/kishikawakatsumi/SpreadsheetView)
 
 It provides a view where the user selects one and only one entire row at once,
 and includes a sorting capability delegation when the user selects a column header.
